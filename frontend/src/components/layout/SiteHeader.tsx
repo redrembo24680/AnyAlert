@@ -25,9 +25,9 @@ export function SiteHeader() {
                     
                     {isAuthenticated ? (
                         <>
-                            <span className="user-greeting" style={{marginRight: '8px', color: 'var(--text)', fontWeight: 600}}>
-                                {user?.name}
-                            </span>
+                            <Link href="/profile" className="user-greeting" style={{marginRight: '8px', color: 'var(--text)', fontWeight: 600}}>
+                                {user?.name || "Профіль"}
+                            </Link>
                             <button onClick={handleLogout} className="button-ghost" style={{padding: '6px 12px', fontSize: '0.9rem'}}>
                                 Вийти
                             </button>

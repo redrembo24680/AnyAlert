@@ -16,6 +16,22 @@ class EmailService:
         )
         await asyncio.to_thread(self._send_email_sync, recipient_email, subject, body)
 
+    async def send_trigger_notification(
+        self, recipient_email: str, url: str, old_value: str, new_value: str, trigger_type: str, title: str | None = None
+    ) -> None:
+        subject = "AnyAlert: Ваше відстеження спрацювало!"
+        
+        product_name = title if title else "товару за посиланням"
+        
+        body = (
+            f"Привіт!\n\n"
+            f"Спрацював тригер '{trigger_type}' для {product_name}:\n{url}\n\n"
+            f"Попереднє значення: {old_value}\n"
+            f"Нове значення: {new_value}\n\n"
+            "Вдалих покупок!\n"
+        )
+        await asyncio.to_thread(self._send_email_sync, recipient_email, subject, body)
+
     def _send_email_sync(self, recipient_email: str, subject: str, body: str) -> None:
         message = EmailMessage()
         message["From"] = f"{settings.email_from_name} <{settings.email_from}>"

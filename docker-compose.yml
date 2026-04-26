@@ -37,10 +37,9 @@ services:
       dockerfile: Dockerfile
     container_name: anyalert-backend
     restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
-      APP_NAME: AnyAlert API
-      API_V1_PREFIX: /api/v1
-      DEBUG: "false"
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/anyalert
       REDIS_URL: redis://redis:6379/0
     ports:
@@ -51,6 +50,36 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  parser-worker:
+    build:
+      context: ./parser
+      dockerfile: Dockerfile
+    container_name: anyalert-parser-worker
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BACKEND_API_URL: http://backend:8000/api/v1
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  parser-beat:
+    build:
+      context: ./parser
+      dockerfile: Dockerfile
+    container_name: anyalert-parser-beat
+    command: celery -A app.worker.celery_app beat --loglevel=info
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BACKEND_API_URL: http://backend:8000/api/v1
+    depends_on:
       redis:
         condition: service_healthy
 

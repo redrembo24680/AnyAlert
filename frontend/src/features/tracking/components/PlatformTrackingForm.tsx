@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { createTracker } from "@/features/tracking/api/trackers";
 
 import type { MarketplacePlatform } from "@/features/tracking/data/platforms";
 
@@ -113,6 +115,8 @@ export function PlatformTrackingForm({ platform }: PlatformTrackingFormProps) {
         seller_change: "",
         rating_drop: ""
     });
+    const { isAuthenticated } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
     function toggleTrigger(triggerType: TriggerType) {
@@ -125,49 +129,76 @@ export function PlatformTrackingForm({ platform }: PlatformTrackingFormProps) {
         });
     }
 
-    function onSubmit(event: FormEvent<HTMLFormElement>) {
+    async function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setMessage(null);
+
+        if (!isAuthenticated) {
+            setMessage("Будь ласка, увійдіть в акаунт, щоб додати відстеження");
+            return;
+        }
 
         if (selectedTriggers.length === 0) {
             setMessage("Оберіть хоча б один тригер сповіщення");
             return;
         }
 
-        const normalizedTriggers = selectedTriggers.map((triggerType) => ({
-            type: triggerType,
-            value: triggerValues[triggerType].trim()
-        }));
-
-        const hasEmptyValue = normalizedTriggers.some((trigger) => !trigger.value);
-        if (hasEmptyValue) {
-            setMessage("Для кожного обраного тригера заповніть значення");
+        const session = localStorage.getItem("anyalert:session");
+        if (!session) {
+            setMessage("Сесія застаріла. Будь ласка, увійдіть знову.");
+            return;
+        }
+        
+        let token: string;
+        try {
+            token = JSON.parse(session).token;
+        } catch {
+            setMessage("Помилка авторизації.");
             return;
         }
 
-        const records = readTrackingRecords();
-        records.push({
-            platform: platform.slug,
-            productUrl,
-            triggers: normalizedTriggers,
-            createdAt: new Date().toISOString()
-        });
+        setIsSubmitting(true);
 
-        writeTrackingRecords(records);
+        try {
+            for (const triggerType of selectedTriggers) {
+                const val = triggerValues[triggerType].trim();
+                
+                // Map frontend trigger types to backend
+                let backendType = triggerType as string;
+                if (triggerType === "availability") {
+                    backendType = "in_stock";
+                }
 
-        setMessage(
-            "Готово. Це mock-режим: заявку збережено локально. Після інтеграції бекенду будемо надсилати реальні сповіщення."
-        );
-        setProductUrl("");
-        setSelectedTriggers(["price_drop"]);
-        setTriggerValues({
-            price_drop: "",
-            availability: "",
-            discount: "",
-            price_rise: "",
-            seller_change: "",
-            rating_drop: ""
-        });
+                let numericValue: number | null = null;
+                if (val) {
+                    numericValue = parseFloat(val.replace(",", "."));
+                }
+
+                await createTracker({
+                    url: productUrl,
+                    network: platform.slug,
+                    trigger_type: backendType,
+                    trigger_value: isNaN(numericValue as number) ? null : numericValue
+                }, token);
+            }
+
+            setMessage("Успішно! Ми почали відстежувати цей товар. Сповіщення прийдуть на вашу пошту.");
+            setProductUrl("");
+            setSelectedTriggers(["price_drop"]);
+            setTriggerValues({
+                price_drop: "",
+                availability: "",
+                discount: "",
+                price_rise: "",
+                seller_change: "",
+                rating_drop: ""
+            });
+        } catch (error) {
+            console.error("Failed to create tracker:", error);
+            setMessage("Не вдалося зберегти відстеження. Перевірте посилання або спробуйте пізніше.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -222,7 +253,9 @@ export function PlatformTrackingForm({ platform }: PlatformTrackingFormProps) {
                 </div>
             </fieldset>
 
-            <button type="submit">Зберегти відстеження</button>
+            <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Збереження..." : "Зберегти відстеження"}
+            </button>
             {message ? <p className="form-message">{message}</p> : null}
         </form>
     );

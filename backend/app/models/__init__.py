@@ -1,3 +1,4 @@
 from app.models.user import User
+from app.models.tracker import ProductTracker
 
-__all__ = ["User"]
+__all__ = ["User", "ProductTracker"]
