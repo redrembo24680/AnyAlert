@@ -18,3 +18,17 @@ uvicorn app.main:app --reload
 ```
 
 Health check: `GET /api/v1/health`
+
+## Docker (backend + postgres + redis)
+
+From project root:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- Backend: http://localhost:8000
+- Postgres: localhost:5432
+- Redis: localhost:6379

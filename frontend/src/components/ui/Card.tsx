@@ -1,15 +1,16 @@
 import { PropsWithChildren } from "react";
 
-export function Card({ children }: PropsWithChildren) {
+interface CardProps extends PropsWithChildren {
+    title?: string;
+    description?: string;
+    className?: string;
+}
+
+export function Card({ children, title, description, className }: CardProps) {
     return (
-        <section
-            style={{
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
-                borderRadius: 12,
-                padding: 16
-            }}
-        >
+        <section className={`card${className ? ` ${className}` : ""}`}>
+            {title ? <h3 className="card-title">{title}</h3> : null}
+            {description ? <p className="card-description">{description}</p> : null}
             {children}
         </section>
     );

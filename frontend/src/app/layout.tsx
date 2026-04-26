@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { SiteHeader } from "@/components/layout/SiteHeader";
+
 export const metadata: Metadata = {
     title: "AnyAlert",
-    description: "Modern alerting platform"
+    description: "Сервіс автоматизації моніторингу товарів за посиланням"
 };
 
 export default function RootLayout({
@@ -13,7 +15,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="uk">
-            <body>{children}</body>
+            <body>
+                <div className="app-shell">
+                    <SiteHeader />
+                    <main className="page-container">{children}</main>
+                    <footer className="site-footer">AnyAlert · Автоматизація рутини для вашого часу</footer>
+                </div>
+            </body>
         </html>
     );
 }

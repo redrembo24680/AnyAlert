@@ -1,6 +1,7 @@
-import type { LoginPayload } from "@/shared/types/api";
+import type { AuthResponse, LoginPayload } from "@/shared/types/api";
 
-export async function login(_payload: LoginPayload): Promise<void> {
-    // Placeholder for real auth integration (JWT/cookie flow).
-    return Promise.resolve();
+import { mockLogin } from "@/features/auth/api/mockAuthStore";
+
+export async function login(payload: LoginPayload): Promise<AuthResponse> {
+    return mockLogin(payload);
 }
