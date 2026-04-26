@@ -8,6 +8,8 @@ export const metadata: Metadata = {
     description: "Сервіс автоматизації моніторингу товарів за посиланням"
 };
 
+import { AuthProvider } from "@/features/auth/contexts/AuthContext";
+
 export default function RootLayout({
     children
 }: Readonly<{
@@ -16,11 +18,13 @@ export default function RootLayout({
     return (
         <html lang="uk">
             <body>
-                <div className="app-shell">
-                    <SiteHeader />
-                    <main className="page-container">{children}</main>
-                    <footer className="site-footer">AnyAlert · Автоматизація рутини для вашого часу</footer>
-                </div>
+                <AuthProvider>
+                    <div className="app-shell">
+                        <SiteHeader />
+                        <main className="page-container">{children}</main>
+                        <footer className="site-footer">AnyAlert · Автоматизація рутини для вашого часу</footer>
+                    </div>
+                </AuthProvider>
             </body>
         </html>
     );

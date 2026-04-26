@@ -1,7 +1,10 @@
 import type { AuthResponse, LoginPayload } from "@/shared/types/api";
 
-import { mockLogin } from "@/features/auth/api/mockAuthStore";
+import { apiFetch } from "@/lib/api/http";
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
-    return mockLogin(payload);
+    return apiFetch<AuthResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
 }

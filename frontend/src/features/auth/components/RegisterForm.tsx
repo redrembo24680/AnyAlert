@@ -27,9 +27,12 @@ export function RegisterForm() {
         setMessage(null);
 
         try {
-            await register({ name, email, password });
-            setMessage("Реєстрація успішна. Переходимо на сторінку входу...");
-            router.push("/login");
+            const response = await register({ name, email, password });
+            let verifyUrl = `/verify-email?email=${encodeURIComponent(email)}`;
+            if (response.dev_verification_code) {
+                verifyUrl += `&code=${encodeURIComponent(response.dev_verification_code)}`;
+            }
+            router.push(verifyUrl);
         } catch (error) {
             if (error instanceof Error) {
                 setMessage(error.message);

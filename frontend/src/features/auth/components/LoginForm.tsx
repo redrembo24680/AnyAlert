@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { login } from "@/features/auth/api/login";
+import { login as loginApi } from "@/features/auth/api/login";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 export function LoginForm() {
     const router = useRouter();
+    const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,7 +21,8 @@ export function LoginForm() {
         setMessage(null);
 
         try {
-            await login({ email, password });
+            const response = await loginApi({ email, password });
+            login(response);
             setMessage("Вхід успішний. Повертаємо на головну...");
             router.push("/");
         } catch (error) {

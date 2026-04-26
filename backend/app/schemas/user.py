@@ -14,6 +14,7 @@ class UserCreate(UserBase):
 
 class UserRead(UserBase):
     id: int
+    is_email_verified: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}

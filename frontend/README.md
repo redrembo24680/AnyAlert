@@ -12,5 +12,6 @@ Feature-oriented architecture with App Router:
 
 ```bash
 npm install
+copy .env.example .env.local
 npm run dev
 ```
