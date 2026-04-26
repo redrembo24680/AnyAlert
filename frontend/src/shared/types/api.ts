@@ -1,8 +1,8 @@
 export interface HealthResponse {
-  status: "ok" | "error";
+    status: "ok" | "error";
 }
 
 export interface LoginPayload {
-  email: string;
-  password: string;
+    email: string;
+    password: string;
 }
