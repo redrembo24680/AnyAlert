@@ -58,11 +58,13 @@ services:
       context: ./parser
       dockerfile: Dockerfile
     container_name: anyalert-parser-worker
-    command: celery -A app.worker.celery_app worker --loglevel=info
+    command: sh -c "watchfiles --filter python 'celery -A app.worker.celery_app worker --loglevel=info' /app/app"
     restart: unless-stopped
     environment:
       REDIS_URL: redis://redis:6379/0
       BACKEND_API_URL: http://backend:8000/api/v1
+    volumes:
+      - ./parser:/app
     depends_on:
       redis:
         condition: service_healthy
@@ -74,11 +76,13 @@ services:
       context: ./parser
       dockerfile: Dockerfile
     container_name: anyalert-parser-beat
-    command: celery -A app.worker.celery_app beat --loglevel=info
+    command: sh -c "watchfiles --filter python 'celery -A app.worker.celery_app beat --loglevel=info' /app/app"
     restart: unless-stopped
     environment:
       REDIS_URL: redis://redis:6379/0
       BACKEND_API_URL: http://backend:8000/api/v1
+    volumes:
+      - ./parser:/app
     depends_on:
       redis:
         condition: service_healthy

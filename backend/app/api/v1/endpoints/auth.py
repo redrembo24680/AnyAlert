@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from app.api.deps import ensure_guest
 from app.dependencies import get_auth_service
 from app.schemas.auth import (
     LoginRequest,
@@ -18,6 +19,7 @@ router = APIRouter(prefix="/auth")
 async def register(
     payload: RegisterRequest,
     auth_service: AuthService = Depends(get_auth_service),
+    _: None = Depends(ensure_guest),
 ) -> RegisterResponse:
     return await auth_service.register(payload)
 
@@ -30,6 +32,7 @@ async def register(
 async def verify_email(
     payload: VerifyEmailRequest,
     auth_service: AuthService = Depends(get_auth_service),
+    _: None = Depends(ensure_guest),
 ) -> VerifyEmailResponse:
     login_response = await auth_service.verify_email(email=payload.email, code=payload.code)
     return VerifyEmailResponse(
@@ -43,5 +46,6 @@ async def verify_email(
 async def login(
     payload: LoginRequest,
     auth_service: AuthService = Depends(get_auth_service),
+    _: None = Depends(ensure_guest),
 ) -> LoginResponse:
     return await auth_service.login(payload)

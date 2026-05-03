@@ -48,7 +48,7 @@ export const marketplacePlatforms: MarketplacePlatform[] = [
         name: "ALLO",
         shortDescription: "Смартфони, електроніка та побутова техніка.",
         longDescription:
-            "Налаштуйте тригери для товарів ALLO: зниження ціни, повернення у наявність та зміни знижки.",
+            "Налаштуйте тригери для товарів ALLO: ціна, кешбек, кредит, Trade-in, зміна кольору, варіанту пам'яті та рейтинг.",
         accent: "#f97316",
         accentSoft: "#ffe6d0",
         bannerFrom: "#fff1e6",

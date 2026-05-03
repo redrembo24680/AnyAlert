@@ -4,17 +4,24 @@ import { apiFetch } from "@/lib/api/http";
 export async function createTracker(payload: TrackerCreatePayload, token: string): Promise<TrackerResponse> {
     return apiFetch<TrackerResponse>("/trackers/", {
         method: "POST",
-        headers: {
-            "Authorization": `Bearer ${token}`
-        },
         body: JSON.stringify(payload)
     });
 }
 
 export async function getMyTrackers(token: string): Promise<TrackerResponse[]> {
     return apiFetch<TrackerResponse[]>("/trackers/", {
+        method: "GET",
         headers: {
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
+export async function getActiveTrackers(token: string): Promise<TrackerResponse[]> {
+    return apiFetch<TrackerResponse[]>("/trackers/active", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`
         }
     });
 }

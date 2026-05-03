@@ -14,36 +14,74 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const SESSION_KEY = "anyalert:session";
 
+function isValidAuthResponse(value: unknown): value is AuthResponse {
+    if (!value || typeof value !== "object") {
+        return false;
+    }
+
+    const candidate = value as Partial<AuthResponse>;
+    return (
+        typeof candidate.token === "string" &&
+        candidate.token.trim().length > 0 &&
+        !!candidate.user &&
+        typeof candidate.user.email === "string"
+    );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // Restore session from localStorage on mount
     useEffect(() => {
-        const stored = localStorage.getItem(SESSION_KEY);
-        if (stored) {
-            try {
-                const parsed = JSON.parse(stored) as AuthResponse;
-                setUser(parsed.user);
-            } catch (e) {
-                console.error("Failed to parse session", e);
-            }
+        // Ensure this runs only on client side
+        if (typeof window === "undefined") {
+            return;
         }
-        setIsLoaded(true);
-    }, []);
+
+        try {
+            // Try to read from localStorage
+            const stored = localStorage.getItem(SESSION_KEY);
+            if (stored) {
+                const parsed: unknown = JSON.parse(stored);
+                if (isValidAuthResponse(parsed)) {
+                    setUser(parsed.user);
+                } else {
+                    localStorage.removeItem(SESSION_KEY);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to restore session from localStorage:", e);
+            localStorage.removeItem(SESSION_KEY);
+        } finally {
+            // Mark as loaded after attempting to restore
+            setIsLoaded(true);
+        }
+    }, []); // Empty dependency - run only once on mount
 
     const login = (response: AuthResponse) => {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(response));
+        // Save to localStorage
+        try {
+            localStorage.setItem(SESSION_KEY, JSON.stringify(response));
+        } catch (e) {
+            console.error("Failed to save session to localStorage:", e);
+        }
+        // Update state
         setUser(response.user);
     };
 
     const logout = () => {
-        localStorage.removeItem(SESSION_KEY);
+        try {
+            localStorage.removeItem(SESSION_KEY);
+        } catch (e) {
+            console.error("Failed to clear session from localStorage:", e);
+        }
         setUser(null);
     };
 
     // Don't render children until we've checked localStorage to prevent hydration mismatch
     if (!isLoaded) {
-        return null; 
+        return null;
     }
 
     return (

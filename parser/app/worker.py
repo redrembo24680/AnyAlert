@@ -7,7 +7,15 @@ celery_app = Celery(
     "anyalert_parser",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["app.tasks.rozetka"]
+    include=[
+        "app.tasks.rozetka",
+        "app.tasks.olx",
+        "app.tasks.prom",
+        "app.tasks.allo",
+        "app.tasks.retail",
+        "app.tasks.comfy",
+        "app.tasks.foxtrot",
+    ]
 )
 
 celery_app.conf.update(
@@ -17,7 +25,7 @@ celery_app.conf.update(
     timezone="Europe/Kiev",
     enable_utc=True,
     beat_schedule={
-        'check-rozetka-every-30-mins': {
+        'check-all-trackers-every-30-mins': {
             'task': 'app.tasks.rozetka.fetch_and_parse_all',
             'schedule': crontab(minute='*/30'),
         },

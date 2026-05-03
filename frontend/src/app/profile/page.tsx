@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { getMe, updateMe } from "@/features/profile/api/user";
-import { getMyTrackers, deleteTracker } from "@/features/tracking/api/trackers";
+import { getActiveTrackers, deleteTracker } from "@/features/tracking/api/trackers";
 import type { UserReadResponse, TrackerResponse } from "@/shared/types/api";
 import Link from "next/link";
 
@@ -12,6 +12,7 @@ export default function ProfilePage() {
     const [userData, setUserData] = useState<UserReadResponse | null>(null);
     const [trackers, setTrackers] = useState<TrackerResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -19,28 +20,98 @@ export default function ProfilePage() {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
 
+    const triggerTypeLabels: Record<string, string> = {
+        price_below: "⬇️ Ціна нижче порогу",
+        price_drop: "📉 Ціна знизилась",
+        price_rise: "📈 Ціна виросла",
+        discount: "🏷️ Знижка досягла порогу",
+        rating_drop: "⭐ Рейтинг впав",
+        views_reach: "👀 Перегляди досягли порогу",
+        reviews_reach: "💬 Відгуки досягли порогу",
+        in_stock: "📦 З'явився в наявності",
+        back_in_stock: "📦 Повернувся в наявність",
+        trade_in_available: "🔁 Доступний Trade-in",
+        credit_available: "💳 Доступний кредит",
+        delivery_available: "🚚 Доступна доставка",
+        pickup_available: "🏬 Доступний самовивіз",
+        personal_price_available: "🏷️ Доступна персональна ціна",
+        gift_offer_available: "🎁 Є подарунок до товару",
+        color_change: "🎨 Змінився колір",
+        memory_variant_change: "💾 Змінилась пам'ять",
+        cashback_reach: "💰 Кешбек досяг порогу",
+        any_change: "🔁 Будь-яка зміна"
+    };
+
+    const triggerValueUnits: Record<string, string> = {
+        price_below: "грн",
+        price_drop: "грн",
+        price_rise: "грн",
+        discount: "%",
+        rating_drop: "",
+        views_reach: "переглядів",
+        reviews_reach: "відгуків",
+        cashback_reach: "грн"
+    };
+
     useEffect(() => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated) {
+            setIsLoading(false);
+            return;
+        }
 
         async function fetchData() {
+            setLoadError(null);
             const session = localStorage.getItem("anyalert:session");
-            if (!session) return;
-            const { token } = JSON.parse(session);
+            if (!session) {
+                console.log("No session found in localStorage");
+                setLoadError("Сесія не знайдена. Будь ласка, увійдіть знову.");
+                setIsLoading(false);
+                return;
+            }
+
+            let token: string;
+            try {
+                const parsed = JSON.parse(session);
+                token = parsed.token;
+                if (!token) {
+                    console.error("No token in session");
+                    setLoadError("Токен авторизації не знайдений.");
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse session:", e);
+                setLoadError("Помилка при читанні сесії.");
+                setIsLoading(false);
+                return;
+            }
 
             try {
-                const [user, trackersList] = await Promise.all([
-                    getMe(token),
-                    getMyTrackers(token)
-                ]);
+                console.log("Fetching user data with token...");
+                const user = await getMe(token);
+                console.log("User data fetched:", user);
                 setUserData(user);
-                setTrackers(trackersList);
                 setFullName(user.full_name || "");
                 setEmail(user.email);
             } catch (error) {
-                console.error("Failed to fetch profile data:", error);
-            } finally {
-                setIsLoading(false);
+                console.error("Failed to fetch user data:", error);
+                setLoadError(`Помилка завантаження даних: ${error instanceof Error ? error.message : String(error)}`);
             }
+
+            try {
+                console.log("Fetching active trackers...");
+                const trackersList = await getActiveTrackers(token);
+                console.log("Trackers fetched:", trackersList);
+                console.log("Trackers count:", trackersList.length);
+                console.log("Active trackers:", trackersList.filter(t => t.is_active).length);
+                setTrackers(trackersList);
+            } catch (error) {
+                console.error("Failed to fetch trackers:", error);
+                // Don't stop if trackers fail to load
+                setTrackers([]);
+            }
+
+            setIsLoading(false);
         }
 
         fetchData();
@@ -58,7 +129,7 @@ export default function ProfilePage() {
         try {
             const updatedUser = await updateMe({ full_name: fullName, email }, authData.token);
             setUserData(updatedUser);
-            
+
             // Update auth context/localstorage
             login({
                 ...authData,
@@ -67,7 +138,7 @@ export default function ProfilePage() {
                     email: updatedUser.email
                 }
             });
-            
+
             setMessage({ text: "Профіль успішно оновлено", type: "success" });
         } catch (error: any) {
             setMessage({ text: "Не вдалося оновити профіль. Можливо, такий email вже зайнятий.", type: "error" });
@@ -92,6 +163,16 @@ export default function ProfilePage() {
         }
     }
 
+    // Utility to safely get hostname from tracker URL
+    const safeHostname = (url?: string) => {
+        try {
+            if (!url) return "посилання відсутнє";
+            return new URL(url).hostname;
+        } catch (e) {
+            return url || "посилання невідоме";
+        }
+    }
+
     if (!isAuthenticated) {
         return (
             <div className="profile-container">
@@ -113,6 +194,23 @@ export default function ProfilePage() {
         );
     }
 
+    if (loadError) {
+        return (
+            <div className="profile-container">
+                <div className="profile-card error-state">
+                    <h2>❌ Помилка завантаження</h2>
+                    <p>{loadError}</p>
+                    <p style={{ fontSize: "0.9em", color: "#666", marginTop: "1rem" }}>
+                        Перевірте консоль браузера (F12) для деталей помилки.
+                    </p>
+                    <button onClick={() => window.location.reload()} className="btn-primary">
+                        Спробуйте ще раз
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="profile-wrapper">
             <header className="profile-header">
@@ -130,7 +228,7 @@ export default function ProfilePage() {
                             </div>
                             <h2>Налаштування акаунта</h2>
                         </div>
-                        
+
                         <form onSubmit={handleUpdateProfile} className="profile-form">
                             <div className="input-group">
                                 <label htmlFor="fullName">Ваше ім'я</label>
@@ -184,66 +282,84 @@ export default function ProfilePage() {
                     <section className="trackers-container">
                         <div className="section-header">
                             <h2>Мої відстеження</h2>
+                            {trackers.length > 0 && (
+                                <p style={{ fontSize: "0.85em", color: "#666" }}>
+                                    Всього: {trackers.length} | Активних: {trackers.filter(t => t.is_active).length}
+                                </p>
+                            )}
                         </div>
 
-                        {trackers.length === 0 ? (
-                            <div className="glass-card empty-state">
-                                <div className="empty-icon">🔔</div>
-                                <h3>У вас ще немає тригерів</h3>
-                                <p>Оберіть платформу та додайте свій перший товар для моніторингу цін.</p>
-                                <Link href="/platforms" className="cta-button">Перейти до платформ</Link>
-                            </div>
-                        ) : (
-                            <div className="trackers-grid">
-                                {trackers.map((tracker) => (
-                                    <div key={tracker.id} className={`tracker-card ${!tracker.is_active ? 'finished' : ''}`}>
-                                        <div className="tracker-top">
-                                            <span className="network-tag">{tracker.network}</span>
-                                            <div className="tracker-actions-top">
-                                                <span className={`status-dot ${tracker.is_active ? 'pulse' : ''}`}></span>
-                                                <button 
-                                                    className="delete-icon-btn" 
-                                                    onClick={() => handleDeleteTracker(tracker.id)}
-                                                    title="Видалити"
-                                                >
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                                                </button>
+                        <div className="trackers-grid">
+                            {trackers.length === 0 ? (
+                                <div className="tracker-card empty-state">
+                                    <div className="empty-icon">🔔</div>
+                                    <h3>У вас ще немає тригерів</h3>
+                                    <p>Додайте товар для відстеження або перевірте консоль, якщо дані мають бути.</p>
+                                    <Link href="/platforms" className="cta-button">Перейти до платформ</Link>
+                                </div>
+                            ) : (
+                                trackers.map((tracker) => {
+                                    const activeLabel = tracker?.is_active ? "Активно" : "Неактивно";
+                                    const hostname = safeHostname(tracker?.url);
+                                    const title = tracker?.title || "(без назви)";
+                                    const triggerType = tracker?.trigger_type || "";
+                                    const triggerTypeLabel = triggerTypeLabels[triggerType] || "🔔 Тригер";
+                                    const triggerUnit = triggerValueUnits[triggerType] || "";
+
+                                    return (
+                                        <div key={tracker?.id ?? Math.random()} className={`tracker-card ${!tracker?.is_active ? 'finished' : ''}`}>
+                                            <div className="tracker-top">
+                                                <span className="network-tag">{tracker?.network || 'невідомо'}</span>
+                                                <div className="tracker-actions-top">
+                                                    <span
+                                                        className={`status-dot ${tracker?.is_active ? 'pulse' : ''}`}
+                                                        title={activeLabel}
+                                                    ></span>
+                                                    <button
+                                                        className="delete-icon-btn"
+                                                        onClick={() => tracker?.id && handleDeleteTracker(tracker.id)}
+                                                        title="Видалити"
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="tracker-content">
-                                            <h3 title={tracker.title || ""}>
-                                                {tracker.title || "Завантаження інформації..."}
-                                            </h3>
-                                            <a href={tracker.url} target="_blank" rel="noopener noreferrer" className="url-link">
-                                                {new URL(tracker.url).hostname}
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                            </a>
-                                        </div>
-                                        <div className="tracker-footer">
-                                            <div className="trigger-info">
-                                                <span className="trigger-type">
-                                                    {tracker.trigger_type === 'price_drop' ? '📉 Ціна нижче' : 
-                                                     tracker.trigger_type === 'in_stock' ? '📦 Наявність' : '🔔 Зміни'}
-                                                </span>
-                                                {tracker.trigger_value && (
-                                                    <span className="trigger-val">{tracker.trigger_value} грн</span>
+                                            <div className="tracker-content">
+                                                <h3 title={title}>
+                                                    {title}
+                                                </h3>
+                                                <a href={tracker?.url ?? '#'} target="_blank" rel="noopener noreferrer" className="url-link">
+                                                    {hostname}
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                                </a>
+                                            </div>
+                                            <div className="tracker-footer">
+                                                <div className="trigger-info">
+                                                    <span className="trigger-type">{triggerTypeLabel}</span>
+                                                    {tracker?.trigger_value != null && (
+                                                        <span className="trigger-val">
+                                                            {triggerUnit
+                                                                ? `${tracker.trigger_value} ${triggerUnit}`
+                                                                : `${tracker.trigger_value}`}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {tracker?.last_price != null && (
+                                                    <div className="last-price">
+                                                        {`${tracker.last_price} грн`}
+                                                    </div>
                                                 )}
                                             </div>
-                                            {tracker.last_price && (
-                                                <div className="last-price">
-                                                    {tracker.last_price} грн
+                                            {!tracker?.is_active && (
+                                                <div className="finished-overlay">
+                                                    <span>Тригер спрацював</span>
                                                 </div>
                                             )}
                                         </div>
-                                        {!tracker.is_active && (
-                                            <div className="finished-overlay">
-                                                <span>Тригер спрацював</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                    );
+                                })
+                            )}
+                        </div>
                     </section>
                 </div>
             </div>
