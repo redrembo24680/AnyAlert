@@ -46,31 +46,31 @@ class TrackerCreate(TrackerBase):
     pass
 
 
-class TrackerResponse(TrackerBase):
+class TrackerResponse(BaseModel):
     id: int
-    user_id: int
-    title: str | None = None
-    last_price: float | None = None
-    last_old_price: float | None = None
-    last_discount_percent: float | None = None
-    last_rating: float | None = None
-    last_views: int | None = None
-    last_reviews_count: int | None = None
-    last_cashback_amount: float | None = None
-    last_trade_in_available: bool | None = None
-    last_credit_available: bool | None = None
-    last_color: str | None = None
-    last_memory_variant: str | None = None
-    last_delivery_available: bool | None = None
-    last_pickup_available: bool | None = None
-    last_personal_price_available: bool | None = None
-    last_gift_offer_available: bool | None = None
-    last_availability: bool | None = None
-    last_status: str | None = None
-    last_checked_at: datetime | None = None
+    url: str
+    network: str
     is_active: bool
     created_at: datetime
     updated_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TriggerResponse(BaseModel):
+    id: int
+    tracker_id: int
+    trigger_type: str
+    trigger_value: float | None = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TrackerWithTriggersResponse(TrackerResponse):
+    triggers: list[TriggerResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
 

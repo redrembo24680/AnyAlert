@@ -8,22 +8,13 @@ import type { MarketplacePlatform } from "@/features/tracking/data/platforms";
 
 type TriggerType =
     | "price_below"
-    | "price_drop"
     | "price_rise"
     | "discount"
-    | "rating_drop"
-    | "views_reach"
-    | "reviews_reach"
-    | "in_stock"
     | "back_in_stock"
     | "trade_in_available"
     | "credit_available"
-    | "delivery_available"
-    | "pickup_available"
     | "personal_price_available"
     | "gift_offer_available"
-    | "color_change"
-    | "memory_variant_change"
     | "cashback_reach"
     | "any_change";
 
@@ -47,13 +38,6 @@ const triggerOptionsByType: Record<TriggerType, TriggerOption> = {
         placeholder: "Наприклад: 15999",
         unitLabel: "грн"
     },
-    price_drop: {
-        type: "price_drop",
-        title: "Ціна знизилась до порогу",
-        inputLabel: "Поріг ціни",
-        placeholder: "Наприклад: 15000",
-        unitLabel: "грн"
-    },
     price_rise: {
         type: "price_rise",
         title: "Ціна виросла вище порогу",
@@ -67,32 +51,6 @@ const triggerOptionsByType: Record<TriggerType, TriggerOption> = {
         inputLabel: "Мінімальна знижка",
         placeholder: "Наприклад: 15",
         unitLabel: "%"
-    },
-    rating_drop: {
-        type: "rating_drop",
-        title: "Рейтинг впав нижче порогу",
-        inputLabel: "Мінімальний рейтинг",
-        placeholder: "Наприклад: 4.5"
-    },
-    views_reach: {
-        type: "views_reach",
-        title: "Кількість переглядів досягла значення",
-        inputLabel: "Переглядів від",
-        placeholder: "Наприклад: 500",
-        unitLabel: "переглядів"
-    },
-    reviews_reach: {
-        type: "reviews_reach",
-        title: "Кількість відгуків досягла значення",
-        inputLabel: "Відгуків від",
-        placeholder: "Наприклад: 20",
-        unitLabel: "відгуків"
-    },
-    in_stock: {
-        type: "in_stock",
-        title: "Товар з'явився у наявності",
-        inputLabel: null,
-        placeholder: ""
     },
     back_in_stock: {
         type: "back_in_stock",
@@ -112,18 +70,6 @@ const triggerOptionsByType: Record<TriggerType, TriggerOption> = {
         inputLabel: null,
         placeholder: ""
     },
-    delivery_available: {
-        type: "delivery_available",
-        title: "З'явилась доставка",
-        inputLabel: null,
-        placeholder: ""
-    },
-    pickup_available: {
-        type: "pickup_available",
-        title: "З'явився самовивіз",
-        inputLabel: null,
-        placeholder: ""
-    },
     personal_price_available: {
         type: "personal_price_available",
         title: "З'явилась персональна ціна",
@@ -133,18 +79,6 @@ const triggerOptionsByType: Record<TriggerType, TriggerOption> = {
     gift_offer_available: {
         type: "gift_offer_available",
         title: "З'явився подарунок до товару",
-        inputLabel: null,
-        placeholder: ""
-    },
-    color_change: {
-        type: "color_change",
-        title: "Змінився колір товару",
-        inputLabel: null,
-        placeholder: ""
-    },
-    memory_variant_change: {
-        type: "memory_variant_change",
-        title: "Змінився варіант пам'яті",
         inputLabel: null,
         placeholder: ""
     },
@@ -164,44 +98,32 @@ const triggerOptionsByType: Record<TriggerType, TriggerOption> = {
 };
 
 const triggersByPlatform: Record<string, TriggerType[]> = {
-    rozetka: ["price_below", "price_rise", "discount", "rating_drop", "back_in_stock", "any_change"],
-    olx: ["price_below", "price_rise", "views_reach", "rating_drop", "back_in_stock", "any_change"],
-    prom: ["price_below", "price_rise", "discount", "views_reach", "back_in_stock", "any_change"],
+    rozetka: ["price_below", "price_rise", "discount", "back_in_stock", "any_change"],
+    olx: ["price_below", "price_rise", "back_in_stock", "any_change"],
+    prom: ["price_below", "price_rise", "discount", "back_in_stock", "any_change"],
     allo: [
         "price_below",
         "price_rise",
         "discount",
         "cashback_reach",
-        "reviews_reach",
         "trade_in_available",
         "credit_available",
-        "color_change",
-        "memory_variant_change",
         "back_in_stock",
         "any_change"
     ],
-    comfy: ["price_below", "price_rise", "discount", "delivery_available", "pickup_available", "personal_price_available", "back_in_stock", "any_change"],
-    foxtrot: ["price_below", "price_rise", "discount", "cashback_reach", "credit_available", "trade_in_available", "delivery_available", "pickup_available", "gift_offer_available", "back_in_stock", "any_change"]
+    comfy: ["price_below", "price_rise", "discount", "personal_price_available", "back_in_stock", "any_change"],
+    foxtrot: ["price_below", "price_rise", "discount", "cashback_reach", "credit_available", "trade_in_available", "gift_offer_available", "back_in_stock", "any_change"]
 };
 
 const defaultTriggerValues: Record<TriggerType, string> = {
     price_below: "",
-    price_drop: "",
     price_rise: "",
     discount: "",
-    rating_drop: "",
-    views_reach: "",
-    reviews_reach: "",
-    in_stock: "",
     back_in_stock: "",
     trade_in_available: "",
     credit_available: "",
-    delivery_available: "",
-    pickup_available: "",
     personal_price_available: "",
     gift_offer_available: "",
-    color_change: "",
-    memory_variant_change: "",
     cashback_reach: "",
     any_change: ""
 };

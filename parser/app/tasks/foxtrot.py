@@ -16,9 +16,8 @@ def parse_foxtrot_product(self, tracker_id: int, url: str):
 
     try:
         result = asyncio.run(async_parse_retail(url))
-        webhook_url = f"{settings.BACKEND_API_URL}/trackers/{tracker_id}/webhook"
+        webhook_url = f"{settings.BACKEND_API_URL}/webhooks/{tracker_id}/foxtrot"
         update_data = {
-            "title": result.get("title"),
             "last_price": result.get("price"),
             "last_old_price": result.get("old_price"),
             "last_discount_percent": result.get("discount_percent"),
@@ -29,6 +28,7 @@ def parse_foxtrot_product(self, tracker_id: int, url: str):
             "last_availability": result.get("availability"),
             "last_rating": result.get("rating"),
             "last_reviews_count": result.get("reviews_count"),
+            "last_views": None,
             "last_trade_in_available": result.get("trade_in_available"),
             "last_credit_available": result.get("credit_available"),
             "last_delivery_available": result.get("delivery_available"),
@@ -56,12 +56,14 @@ def parse_foxtrot_offers(self, tracker_id: int, url: str):
 
     try:
         result = asyncio.run(async_parse_retail(url))
-        webhook_url = f"{settings.BACKEND_API_URL}/trackers/{tracker_id}/webhook"
+        webhook_url = f"{settings.BACKEND_API_URL}/webhooks/{tracker_id}/foxtrot-offers"
         update_data = {
             "last_price": result.get("price"),
             "last_old_price": result.get("old_price"),
             "last_discount_percent": result.get("discount_percent"),
             "last_cashback_amount": result.get("cashback_amount"),
+            "last_reviews_count": None,
+            "last_views": None,
             "last_personal_price_available": result.get("personal_price_available"),
             "last_gift_offer_available": result.get("gift_offer_available"),
             "last_color": result.get("color"),

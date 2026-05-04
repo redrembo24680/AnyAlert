@@ -143,6 +143,8 @@ async def async_parse_rozetka(url: str) -> Dict[str, Any]:
                 "status": status,
                 "availability": availability,
                 "rating": rating,
+                "views": None,
+                "reviews_count": None,
                 "checked_at": datetime.now(timezone.utc).isoformat()
             }
         finally:
@@ -160,16 +162,17 @@ def parse_rozetka_product(self, tracker_id: int, url: str):
         # Run the async playwright parser in the synchronous celery task
         result = asyncio.run(async_parse_rozetka(url))
 
-        # Send result back to backend
-        webhook_url = f"{settings.BACKEND_API_URL}/trackers/{tracker_id}/webhook"
+        # Send result back to backend (rozetka_tracker_data table)
+        webhook_url = f"{settings.BACKEND_API_URL}/webhooks/{tracker_id}/rozetka"
         update_data = {
-            "title": result.get("title"),
             "last_price": result["price"],
             "last_old_price": result["old_price"],
             "last_discount_percent": result["discount_percent"],
             "last_status": result["status"],
             "last_availability": result["availability"],
             "last_rating": result["rating"],
+            "last_views": result["views"],
+            "last_reviews_count": result["reviews_count"],
             "last_checked_at": result["checked_at"]
         }
 

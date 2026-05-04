@@ -26,7 +26,6 @@ export default function ProfilePage() {
         price_rise: "📈 Ціна виросла",
         discount: "🏷️ Знижка досягла порогу",
         rating_drop: "⭐ Рейтинг впав",
-        views_reach: "👀 Перегляди досягли порогу",
         reviews_reach: "💬 Відгуки досягли порогу",
         in_stock: "📦 З'явився в наявності",
         back_in_stock: "📦 Повернувся в наявність",
@@ -48,7 +47,6 @@ export default function ProfilePage() {
         price_rise: "грн",
         discount: "%",
         rating_drop: "",
-        views_reach: "переглядів",
         reviews_reach: "відгуків",
         cashback_reach: "грн"
     };

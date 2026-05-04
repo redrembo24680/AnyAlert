@@ -25,9 +25,9 @@ celery_app.conf.update(
     timezone="Europe/Kiev",
     enable_utc=True,
     beat_schedule={
-        'check-all-trackers-every-30-mins': {
+        'check-all-trackers-every-10-mins': {
             'task': 'app.tasks.rozetka.fetch_and_parse_all',
-            'schedule': crontab(minute='*/30'),
+            'schedule': crontab(minute='*/10'),
         },
     }
 )
