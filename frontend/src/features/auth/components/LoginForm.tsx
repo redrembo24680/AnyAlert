@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { login as loginApi } from "@/features/auth/api/login";
+import { telegramLogin } from "@/features/auth/api/telegram";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { TelegramLoginButton } from "@/features/auth/components/TelegramLoginButton";
+import type { TelegramWidgetUser } from "@/shared/types/api";
+
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? "";
 
 export function LoginForm() {
     const router = useRouter();
@@ -33,6 +38,17 @@ export function LoginForm() {
             }
         } finally {
             setIsSubmitting(false);
+        }
+    }
+
+    async function onTelegramAuth(tgUser: TelegramWidgetUser) {
+        setMessage(null);
+        try {
+            const response = await telegramLogin(tgUser);
+            login(response);
+            router.push("/");
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "Не вдалося увійти через Telegram.");
         }
     }
 
@@ -64,9 +80,17 @@ export function LoginForm() {
 
             {message ? <p className="form-message">{message}</p> : null}
 
+            {BOT_USERNAME && (
+                <>
+                    <div className="auth-divider"><span>або</span></div>
+                    <TelegramLoginButton botUsername={BOT_USERNAME} onAuth={onTelegramAuth} />
+                </>
+            )}
+
             <p className="auth-helper">
                 Ще не маєте акаунта? <Link href="/register">Створити акаунт</Link>
             </p>
         </form>
     );
 }
+

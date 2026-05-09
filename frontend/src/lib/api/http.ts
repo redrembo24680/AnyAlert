@@ -28,6 +28,11 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     });
 
     if (!response.ok) {
+        if (response.status === 401 && typeof window !== "undefined") {
+            // Token expired or invalid — clear session and reload to force login
+            window.localStorage.removeItem("anyalert:session");
+            window.location.href = "/login";
+        }
         const details = await response.text();
         throw new Error(`API ${response.status}: ${details}`);
     }

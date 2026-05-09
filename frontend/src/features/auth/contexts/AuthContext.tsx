@@ -14,6 +14,15 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const SESSION_KEY = "anyalert:session";
 
+function isTokenExpired(token: string): boolean {
+    try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return typeof payload.exp === "number" && Date.now() / 1000 > payload.exp;
+    } catch {
+        return true;
+    }
+}
+
 function isValidAuthResponse(value: unknown): value is AuthResponse {
     if (!value || typeof value !== "object") {
         return false;
@@ -44,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const stored = localStorage.getItem(SESSION_KEY);
             if (stored) {
                 const parsed: unknown = JSON.parse(stored);
-                if (isValidAuthResponse(parsed)) {
+                if (isValidAuthResponse(parsed) && !isTokenExpired(parsed.token)) {
                     setUser(parsed.user);
                 } else {
                     localStorage.removeItem(SESSION_KEY);

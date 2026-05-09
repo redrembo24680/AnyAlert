@@ -76,9 +76,19 @@ async def async_parse_retail(url: str) -> Dict[str, Any]:
             if title_element:
                 title = (await title_element.inner_text()).strip()
             if not title:
-                og_title = await page.get_attribute('meta[property="og:title"]', 'content')
-                if og_title:
-                    title = og_title.strip()
+                og_title_element = await page.query_selector('meta[property="og:title"]')
+                if og_title_element:
+                    og_title = await og_title_element.get_attribute("content")
+                    if og_title:
+                        title = og_title.strip()
+
+            if not title:
+                try:
+                    page_title = await page.title()
+                    if page_title:
+                        title = page_title.strip()
+                except Exception:
+                    pass
 
             # Prefer prices located inside the purchase block (near the Buy button).
             prices = []

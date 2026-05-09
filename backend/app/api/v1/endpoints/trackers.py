@@ -62,18 +62,49 @@ async def create_tracker(
     )
     existing_result = await db.execute(same_tracker_stmt)
     existing_trackers = existing_result.scalars().all()
-
     if existing_trackers:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Активний трекер для цього URL вже існує",
-        )
+        # If a tracker for this URL/network already exists, attach a new trigger
+        # unless an identical active trigger is already present.
+        tracker_ids = [t.id for t in existing_trackers]
 
-    # Create the tracker without trigger data
+        triggers_stmt = select(ProductTrackerTrigger).where(
+            ProductTrackerTrigger.tracker_id.in_(tracker_ids),
+            ProductTrackerTrigger.trigger_type == tracker_in.trigger_type,
+            ProductTrackerTrigger.is_active == True,
+        )
+        # match trigger_value explicitly (NULLs included)
+        if tracker_in.trigger_value is None:
+            triggers_stmt = triggers_stmt.where(ProductTrackerTrigger.trigger_value == None)
+        else:
+            triggers_stmt = triggers_stmt.where(ProductTrackerTrigger.trigger_value == tracker_in.trigger_value)
+
+        trig_res = await db.execute(triggers_stmt)
+        matching_triggers = trig_res.scalars().all()
+
+        if matching_triggers:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Активний тригер того ж типу/значення вже існує для цього URL",
+            )
+
+        # Attach new trigger to the first existing tracker
+        parent_tracker = existing_trackers[0]
+        trigger = ProductTrackerTrigger(
+            tracker_id=parent_tracker.id,
+            trigger_type=tracker_in.trigger_type,
+            trigger_value=tracker_in.trigger_value,
+            is_active=True,
+        )
+        db.add(trigger)
+        await db.commit()
+        await db.refresh(parent_tracker)
+        return parent_tracker
+
+    # No existing active tracker — create the tracker with trigger
     tracker = ProductTracker(
         url=tracker_in.url,
         network=tracker_in.network,
-        user_id=current_user.id
+        user_id=current_user.id,
     )
     db.add(tracker)
     await db.flush()  # Get the tracker ID
@@ -83,7 +114,7 @@ async def create_tracker(
         tracker_id=tracker.id,
         trigger_type=tracker_in.trigger_type,
         trigger_value=tracker_in.trigger_value,
-        is_active=True
+        is_active=True,
     )
     db.add(trigger)
     await db.commit()

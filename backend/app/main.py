@@ -1,13 +1,23 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.bot.application import start_bot, stop_bot
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await start_bot()
+    yield
+    await stop_bot()
 
 
 def create_application() -> FastAPI:
-    app = FastAPI(title=settings.app_name, debug=settings.debug)
+    app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_allow_origins_list,

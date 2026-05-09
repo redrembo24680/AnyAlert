@@ -3,7 +3,8 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { getMe, updateMe } from "@/features/profile/api/user";
-import { getActiveTrackers, deleteTracker } from "@/features/tracking/api/trackers";
+import { getMyTrackers, deleteTracker } from "@/features/tracking/api/trackers";
+import { TelegramSection } from "@/features/auth/components/TelegramSection";
 import type { UserReadResponse, TrackerResponse } from "@/shared/types/api";
 import Link from "next/link";
 
@@ -97,8 +98,8 @@ export default function ProfilePage() {
             }
 
             try {
-                console.log("Fetching active trackers...");
-                const trackersList = await getActiveTrackers(token);
+                console.log("Fetching my trackers...");
+                const trackersList = await getMyTrackers(token);
                 console.log("Trackers fetched:", trackersList);
                 console.log("Trackers count:", trackersList.length);
                 console.log("Active trackers:", trackersList.filter(t => t.is_active).length);
@@ -273,6 +274,19 @@ export default function ProfilePage() {
                             <span className="stat-value active">{trackers.filter(t => t.is_active).length}</span>
                         </div>
                     </div>
+
+                    {userData && (
+                        <TelegramSection
+                            user={userData}
+                            onStatusChange={async () => {
+                                const session = localStorage.getItem("anyalert:session");
+                                if (!session) return;
+                                const { token } = JSON.parse(session);
+                                const updated = await getMe(token);
+                                setUserData(updated);
+                            }}
+                        />
+                    )}
                 </div>
 
                 {/* Right Column: Trackers List */}

@@ -86,4 +86,28 @@ export interface UserReadResponse {
     full_name: string | null;
     is_email_verified: boolean;
     created_at: string;
+    telegram_id: number | null;
+    telegram_username: string | null;
 }
+
+export interface TelegramLinkCodeResponse {
+    code: string;
+    ttl_minutes: number;
+    bot_username: string | null;
+}
+
+export interface TelegramStatusResponse {
+    linked: boolean;
+    telegram_username: string | null;
+}
+
+export interface TelegramWidgetUser {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+    auth_date: number;
+    hash: string;
+}
+

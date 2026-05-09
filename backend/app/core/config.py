@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     cors_allow_origins: str = "http://localhost:3000,http://localhost:3001"
     jwt_secret_key: str = "change-me-in-env"
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = 10080  # 7 days
     email_verification_code_ttl_minutes: int = 10
     email_enabled: bool = False
     email_from: str = "noreply@anyalert.local"
@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     smtp_use_starttls: bool = False
     smtp_use_ssl: bool = False
     smtp_timeout_seconds: int = 10
+
+    # Telegram bot
+    telegram_bot_token: str | None = None
+    telegram_bot_username: str | None = None
+    telegram_link_code_ttl_minutes: int = 15
 
     @property
     def cors_allow_origins_list(self) -> list[str]:

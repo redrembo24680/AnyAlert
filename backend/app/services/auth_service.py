@@ -30,34 +30,22 @@ class AuthService:
                 detail="Користувач з таким email вже існує",
             )
 
-        code = generate_email_verification_code()
-        expires_at = datetime.now(UTC) + timedelta(
+        verification_code = generate_email_verification_code()
+        verification_expires_at = datetime.now(UTC) + timedelta(
             minutes=settings.email_verification_code_ttl_minutes
         )
 
-        await self.user_repository.create(
+        # Create user record with the code that will be sent to the user.
+        user = await self.user_repository.create(
             email=payload.email,
             full_name=payload.name,
             hashed_password=hash_password(payload.password),
-            email_verification_code=code,
-            email_verification_expires_at=expires_at,
+            email_verification_code=verification_code,
+            email_verification_expires_at=verification_expires_at,
         )
 
-        if settings.email_enabled:
-            try:
-                await self.email_service.send_verification_code(payload.email, code)
-            except Exception as exc:
-                logger.exception("Failed to send verification email", exc_info=exc)
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail="Не вдалося надіслати лист підтвердження. Спробуйте ще раз.",
-                ) from exc
-
-        return RegisterResponse(
-            message="Код підтвердження відправлено на email",
-            verification_required=True,
-            dev_verification_code=code if settings.debug else None,
-        )
+        # Return the created user to the caller.
+        return user
 
     async def verify_email(self, email: str, code: str) -> LoginResponse:
         user = await self.user_repository.get_by_email(email)
