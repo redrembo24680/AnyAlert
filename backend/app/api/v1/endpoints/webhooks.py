@@ -412,6 +412,11 @@ class RozetkaWebhookData(BaseModel):
     last_rating: float | None = None
     last_views: int | None = None
     last_reviews_count: int | None = None
+    last_cashback_amount: float | None = None
+    last_trade_in_available: bool | None = None
+    last_credit_available: bool | None = None
+    last_gift_offer_available: bool | None = None
+    last_personal_price_available: bool | None = None
     last_checked_at: str | None = None
 
 
@@ -448,6 +453,11 @@ async def webhook_rozetka(
         existing.last_rating = data.last_rating
         existing.last_views = data.last_views
         existing.last_reviews_count = data.last_reviews_count
+        existing.last_cashback_amount = data.last_cashback_amount
+        existing.last_trade_in_available = data.last_trade_in_available
+        existing.last_credit_available = data.last_credit_available
+        existing.last_gift_offer_available = data.last_gift_offer_available
+        existing.last_personal_price_available = data.last_personal_price_available
         existing.last_checked_at = _parse_iso_datetime(data.last_checked_at)
     else:
         record = RozetkaTrackerData(
@@ -460,6 +470,11 @@ async def webhook_rozetka(
             last_rating=data.last_rating,
             last_views=data.last_views,
             last_reviews_count=data.last_reviews_count,
+            last_cashback_amount=data.last_cashback_amount,
+            last_trade_in_available=data.last_trade_in_available,
+            last_credit_available=data.last_credit_available,
+            last_gift_offer_available=data.last_gift_offer_available,
+            last_personal_price_available=data.last_personal_price_available,
             last_checked_at=_parse_iso_datetime(data.last_checked_at),
         )
         db.add(record)
@@ -635,6 +650,7 @@ class AlloWebhookData(BaseModel):
     last_cashback_amount: float | None = None
     last_trade_in_available: bool | None = None
     last_credit_available: bool | None = None
+    last_gift_offer_available: bool | None = None
     last_color: str | None = None
     last_memory_variant: str | None = None
     last_delivery_available: bool | None = None
@@ -685,6 +701,7 @@ async def webhook_allo(
             last_cashback_amount=data.last_cashback_amount,
             last_trade_in_available=data.last_trade_in_available,
             last_credit_available=data.last_credit_available,
+            last_gift_offer_available=data.last_gift_offer_available,
             last_color=data.last_color,
             last_memory_variant=data.last_memory_variant,
             last_delivery_available=data.last_delivery_available,
@@ -715,8 +732,12 @@ class ComfyWebhookData(BaseModel):
     last_availability: bool | None = None
     last_rating: float | None = None
     last_reviews_count: int | None = None
+    last_views: int | None = None
     last_cashback_amount: float | None = None
     last_personal_price_available: bool | None = None
+    last_trade_in_available: bool | None = None
+    last_credit_available: bool | None = None
+    last_gift_offer_available: bool | None = None
     last_color: str | None = None
     last_memory_variant: str | None = None
     last_delivery_available: bool | None = None
@@ -763,8 +784,12 @@ async def webhook_comfy(
             last_availability=data.last_availability,
             last_rating=data.last_rating,
             last_reviews_count=data.last_reviews_count,
+            last_views=data.last_views,
             last_cashback_amount=data.last_cashback_amount,
             last_personal_price_available=data.last_personal_price_available,
+            last_trade_in_available=data.last_trade_in_available,
+            last_credit_available=data.last_credit_available,
+            last_gift_offer_available=data.last_gift_offer_available,
             last_color=data.last_color,
             last_memory_variant=data.last_memory_variant,
             last_delivery_available=data.last_delivery_available,
@@ -873,14 +898,16 @@ class FoxtrotWebhookData(BaseModel):
     last_availability: bool | None = None
     last_rating: float | None = None
     last_reviews_count: int | None = None
+    last_views: int | None = None
     last_cashback_amount: float | None = None
     last_trade_in_available: bool | None = None
     last_credit_available: bool | None = None
+    last_gift_offer_available: bool | None = None
+    last_personal_price_available: bool | None = None
     last_color: str | None = None
     last_memory_variant: str | None = None
     last_delivery_available: bool | None = None
     last_pickup_available: bool | None = None
-    last_gift_offer_available: bool | None = None
     last_checked_at: str | None = None
 
 
@@ -923,14 +950,16 @@ async def webhook_foxtrot(
             last_availability=data.last_availability,
             last_rating=data.last_rating,
             last_reviews_count=data.last_reviews_count,
+            last_views=data.last_views,
             last_cashback_amount=data.last_cashback_amount,
             last_trade_in_available=data.last_trade_in_available,
             last_credit_available=data.last_credit_available,
+            last_gift_offer_available=data.last_gift_offer_available,
+            last_personal_price_available=data.last_personal_price_available,
             last_color=data.last_color,
             last_memory_variant=data.last_memory_variant,
             last_delivery_available=data.last_delivery_available,
             last_pickup_available=data.last_pickup_available,
-            last_gift_offer_available=data.last_gift_offer_available,
             last_checked_at=_parse_iso_datetime(data.last_checked_at),
         )
         db.add(record)

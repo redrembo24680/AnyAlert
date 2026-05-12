@@ -18,11 +18,16 @@ class RozetkaTrackerData(Base):
     last_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     last_old_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     last_discount_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
+    last_cashback_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     last_status: Mapped[str | None] = mapped_column(String(100), nullable=True)
     last_availability: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     last_rating: Mapped[float | None] = mapped_column(Float, nullable=True)
     last_reviews_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_views: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_trade_in_available: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    last_credit_available: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    last_gift_offer_available: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    last_personal_price_available: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     last_checked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

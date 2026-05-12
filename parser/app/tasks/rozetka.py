@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict
 
@@ -135,6 +136,44 @@ async def async_parse_rozetka(url: str) -> Dict[str, Any]:
                 except ValueError:
                     pass
 
+            # Extract body text for regex-based fields
+            body_text = await page.locator("body").inner_text()
+
+            # Cashback (Rozetka uses bonus points displayed as "+ X бонусів" or cashback)
+            cashback_amount = None
+            cashback_patterns = [
+                r"\+\s*(\d[\d\s\u00A0]*)\s*(?:бонус|грн\s+кешбек|cashback)",
+                r"(\d[\d\s\u00A0]*)\s*(?:бонус[ів]*|cashback)",
+            ]
+            for cb_pattern in cashback_patterns:
+                cb_match = re.search(cb_pattern, body_text, flags=re.IGNORECASE)
+                if cb_match:
+                    digits = re.sub(r"[\s\u00A0]", "", cb_match.group(1))
+                    try:
+                        val = float(digits)
+                        if 1 <= val <= 100000:
+                            cashback_amount = val
+                            break
+                    except ValueError:
+                        pass
+
+            trade_in_available = bool(
+                re.search(r"trade-?in|обмін\s+старого", body_text, flags=re.IGNORECASE)
+            )
+            credit_available = bool(
+                re.search(r"кредит|розстрочка|оплата\s+частинами", body_text, flags=re.IGNORECASE)
+            )
+            gift_offer_available = bool(
+                re.search(r"подарун|gift\s+offer|у\s+подарунок", body_text, flags=re.IGNORECASE)
+            )
+            personal_price_available = bool(
+                re.search(
+                    r"персональн[а-яіїєґ]*\s+цін|personal\s+price",
+                    body_text,
+                    flags=re.IGNORECASE,
+                )
+            )
+
             return {
                 "title": title,
                 "price": price,
@@ -145,6 +184,11 @@ async def async_parse_rozetka(url: str) -> Dict[str, Any]:
                 "rating": rating,
                 "views": None,
                 "reviews_count": None,
+                "cashback_amount": cashback_amount,
+                "trade_in_available": trade_in_available,
+                "credit_available": credit_available,
+                "gift_offer_available": gift_offer_available,
+                "personal_price_available": personal_price_available,
                 "checked_at": datetime.now(timezone.utc).isoformat()
             }
         finally:
@@ -173,6 +217,11 @@ def parse_rozetka_product(self, tracker_id: int, url: str):
             "last_rating": result["rating"],
             "last_views": result["views"],
             "last_reviews_count": result["reviews_count"],
+            "last_cashback_amount": result["cashback_amount"],
+            "last_trade_in_available": result["trade_in_available"],
+            "last_credit_available": result["credit_available"],
+            "last_gift_offer_available": result["gift_offer_available"],
+            "last_personal_price_available": result["personal_price_available"],
             "last_checked_at": result["checked_at"]
         }
 

@@ -26,7 +26,7 @@ def parse_prom_product(self, tracker_id: int, url: str):
             "last_availability": result.get("availability"),
             "last_rating": result.get("rating"),
             "last_views": None,
-            "last_reviews_count": None,
+            "last_reviews_count": result.get("reviews_count"),
             "last_checked_at": result.get("checked_at"),
         }
 
